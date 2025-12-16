@@ -1,7 +1,14 @@
-'use client';
-
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
-import { Question, EvaluationResponse, TutorialResponse, SummaryResponse } from '@/lib/prompts';
+import {
+    generateQuestions as apiGenerateQuestions,
+    evaluateAnswer as apiEvaluateAnswer,
+    generateSummary as apiGenerateSummary,
+    generateTutorial as apiGenerateTutorial,
+    Question,
+    EvaluationResponse,
+    SummaryResponse,
+    TutorialResponse,
+} from '../lib/api';
 
 interface AnswerWithFeedback {
     questionId: number;
@@ -10,51 +17,32 @@ interface AnswerWithFeedback {
     isEvaluating: boolean;
 }
 
-
 interface LearningState {
-
     documentContent: string | null;
     documentSummary: string | null;
-
     questions: Question[];
     isLoadingQuestions: boolean;
     questionsError: string | null;
-
-    
     answers: Map<number, AnswerWithFeedback>;
     currentQuestionIndex: number;
-
     tutorial: TutorialResponse | null;
     isLoadingTutorial: boolean;
     tutorialError: string | null;
-
-    
     summary: SummaryResponse | null;
     isLoadingSummary: boolean;
     summaryError: string | null;
-
-    
     isSessionComplete: boolean;
 }
 
 interface LearningActions {
- 
     setDocument: (content: string) => void;
     clearDocument: () => void;
-
     generateQuestions: () => Promise<void>;
-
     generateTutorial: () => Promise<void>;
-
-    // Summary
     generateSummary: () => Promise<void>;
-
-    // Answers
     submitAnswer: (questionId: number, answer: string) => Promise<void>;
     goToNextQuestion: () => void;
     goToPreviousQuestion: () => void;
-
-    // Session
     resetSession: () => void;
     completeSession: () => void;
 }
@@ -63,7 +51,6 @@ type LearningContextType = LearningState & LearningActions;
 
 const LearningContext = createContext<LearningContextType | null>(null);
 
-// Initial state
 const initialState: LearningState = {
     documentContent: null,
     documentSummary: null,
@@ -84,7 +71,6 @@ const initialState: LearningState = {
 export function LearningProvider({ children }: { children: ReactNode }) {
     const [state, setState] = useState<LearningState>(initialState);
 
-    // Set document content
     const setDocument = useCallback((content: string) => {
         setState(prev => ({
             ...prev,
@@ -98,12 +84,10 @@ export function LearningProvider({ children }: { children: ReactNode }) {
         }));
     }, []);
 
-    // Clear document and reset
     const clearDocument = useCallback(() => {
         setState(initialState);
     }, []);
 
-    // Generate questions from document
     const generateQuestions = useCallback(async () => {
         if (!state.documentContent) {
             setState(prev => ({ ...prev, questionsError: 'No document uploaded' }));
@@ -113,18 +97,7 @@ export function LearningProvider({ children }: { children: ReactNode }) {
         setState(prev => ({ ...prev, isLoadingQuestions: true, questionsError: null }));
 
         try {
-            const response = await fetch('/api/generate-questions', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ content: state.documentContent }),
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.error || 'Failed to generate questions');
-            }
-
+            const data = await apiGenerateQuestions(state.documentContent);
             setState(prev => ({
                 ...prev,
                 questions: data.questions,
@@ -140,14 +113,12 @@ export function LearningProvider({ children }: { children: ReactNode }) {
         }
     }, [state.documentContent]);
 
-    // Submit and evaluate an answer
     const submitAnswer = useCallback(async (questionId: number, answer: string) => {
         if (!state.documentSummary) return;
 
         const question = state.questions.find(q => q.id === questionId);
         if (!question) return;
 
-        // Set evaluating state
         setState(prev => {
             const newAnswers = new Map(prev.answers);
             newAnswers.set(questionId, {
@@ -160,34 +131,13 @@ export function LearningProvider({ children }: { children: ReactNode }) {
         });
 
         try {
-            const response = await fetch('/api/evaluate-answer', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    question: question.question,
-                    answer,
-                    context: state.documentSummary,
-                }),
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.error || 'Failed to evaluate answer');
-            }
-
+            const evaluation = await apiEvaluateAnswer(question.question, answer, state.documentSummary);
             setState(prev => {
                 const newAnswers = new Map(prev.answers);
                 newAnswers.set(questionId, {
                     questionId,
                     answer,
-                    feedback: {
-                        score: data.score,
-                        strengths: data.strengths,
-                        gaps: data.gaps,
-                        personalized_feedback: data.personalized_feedback,
-                        improvement_tip: data.improvement_tip,
-                    },
+                    feedback: evaluation,
                     isEvaluating: false,
                 });
                 return { ...prev, answers: newAnswers };
@@ -207,7 +157,6 @@ export function LearningProvider({ children }: { children: ReactNode }) {
         }
     }, [state.documentSummary, state.questions]);
 
-    // Navigation
     const goToNextQuestion = useCallback(() => {
         setState(prev => ({
             ...prev,
@@ -222,7 +171,6 @@ export function LearningProvider({ children }: { children: ReactNode }) {
         }));
     }, []);
 
-    // Session management
     const resetSession = useCallback(() => {
         setState(initialState);
     }, []);
@@ -231,7 +179,6 @@ export function LearningProvider({ children }: { children: ReactNode }) {
         setState(prev => ({ ...prev, isSessionComplete: true }));
     }, []);
 
-    // Generate tutorial from document
     const generateTutorial = useCallback(async () => {
         if (!state.documentContent) {
             setState(prev => ({ ...prev, tutorialError: 'No document uploaded' }));
@@ -241,21 +188,10 @@ export function LearningProvider({ children }: { children: ReactNode }) {
         setState(prev => ({ ...prev, isLoadingTutorial: true, tutorialError: null }));
 
         try {
-            const response = await fetch('/api/generate-tutorial', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ content: state.documentContent }),
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.error || 'Failed to generate tutorial');
-            }
-
+            const tutorial = await apiGenerateTutorial(state.documentContent);
             setState(prev => ({
                 ...prev,
-                tutorial: data.tutorial,
+                tutorial,
                 isLoadingTutorial: false,
             }));
         } catch (error) {
@@ -267,7 +203,6 @@ export function LearningProvider({ children }: { children: ReactNode }) {
         }
     }, [state.documentContent]);
 
-    // Generate summary from document
     const generateSummary = useCallback(async () => {
         if (!state.documentContent) {
             setState(prev => ({ ...prev, summaryError: 'No document uploaded' }));
@@ -277,21 +212,10 @@ export function LearningProvider({ children }: { children: ReactNode }) {
         setState(prev => ({ ...prev, isLoadingSummary: true, summaryError: null }));
 
         try {
-            const response = await fetch('/api/generate-summary', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ content: state.documentContent }),
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.error || 'Failed to generate summary');
-            }
-
+            const summary = await apiGenerateSummary(state.documentContent);
             setState(prev => ({
                 ...prev,
-                summary: data.summary,
+                summary,
                 isLoadingSummary: false,
             }));
         } catch (error) {

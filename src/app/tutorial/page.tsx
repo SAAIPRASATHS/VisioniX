@@ -129,7 +129,7 @@ export default function TutorialPage() {
 
             {/* Actions */}
             <div className="mt-8 flex justify-center gap-4">
-                <Button variant="secondary" onClick={() => router.push('/learn')}>
+                <Button variant="secondary" onClick={() => router.push('/quiz')}>
                     Take Quiz Instead
                 </Button>
                 <Button onClick={() => generateTutorial()}>

@@ -19,7 +19,6 @@ export default function ResultsPage() {
         }
     }, [isSessionComplete, questions.length, router]);
 
-    // Calculate overall stats
     const stats = useMemo(() => {
         let totalScore = 0;
         let answeredCount = 0;

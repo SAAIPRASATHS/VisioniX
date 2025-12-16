@@ -1,15 +1,19 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Loader2, AlertCircle, FileText, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Loader2, AlertCircle, FileText, RefreshCw, Sparkles, ArrowRight, CheckCircle, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
 import { SummaryCard } from '@/components/SummaryCard';
+import { DocumentUpload } from '@/components/DocumentUpload';
 import { useLearning } from '@/context/LearningContext';
+import { useAuth } from '@/context/AuthContext';
 
 export default function SummaryPage() {
     const router = useRouter();
+    const { isAuthenticated, isLoading: authLoading } = useAuth();
+    const [showSummary, setShowSummary] = useState(false);
     const {
         documentContent,
         summary,
@@ -18,14 +22,213 @@ export default function SummaryPage() {
         generateSummary,
     } = useLearning();
 
-    // Redirect if no document
+    // Redirect to login if not authenticated
     useEffect(() => {
-        if (!documentContent) {
-            router.push('/');
-        } else if (!summary && !isLoadingSummary && !summaryError) {
-            generateSummary();
+        if (!authLoading && !isAuthenticated) {
+            router.push('/login');
         }
-    }, [documentContent, summary, isLoadingSummary, summaryError, generateSummary, router]);
+    }, [isAuthenticated, authLoading, router]);
+
+    const handleGenerateSummary = async () => {
+        setShowSummary(true);
+        if (!summary && !isLoadingSummary) {
+            await generateSummary();
+        }
+    };
+
+    // Show loading while checking auth
+    if (authLoading) {
+        return (
+            <div className="max-w-4xl mx-auto px-4 py-16">
+                <Card>
+                    <CardContent className="flex flex-col items-center justify-center py-16">
+                        <Loader2 className="w-12 h-12 text-blue-500 animate-spin" />
+                        <p className="text-muted-foreground mt-4">Loading...</p>
+                    </CardContent>
+                </Card>
+            </div>
+        );
+    }
+
+    // If not authenticated, show message
+    if (!isAuthenticated) {
+        return (
+            <div className="max-w-4xl mx-auto px-4 py-16">
+                <Card>
+                    <CardContent className="flex flex-col items-center justify-center py-16">
+                        <div className="p-4 rounded-full bg-yellow-500/10">
+                            <Lock className="w-12 h-12 text-yellow-500" />
+                        </div>
+                        <h2 className="text-xl font-semibold text-foreground mt-6">
+                            Authentication Required
+                        </h2>
+                        <p className="text-muted-foreground mt-2 text-center">
+                            Please sign in to access the summarization feature.
+                        </p>
+                        <Button onClick={() => router.push('/login')} className="mt-6">
+                            Sign In
+                        </Button>
+                    </CardContent>
+                </Card>
+            </div>
+        );
+    }
+
+    // No document state - show upload section
+    if (!documentContent) {
+        return (
+            <div className="max-w-4xl mx-auto px-4 py-12">
+                {/* Header */}
+                <div className="flex items-center mb-8">
+                    <Button onClick={() => router.push('/')} variant="ghost" size="sm">
+                        <ArrowLeft className="w-4 h-4 mr-2" />
+                        Back to Home
+                    </Button>
+                </div>
+
+                {/* Feature Introduction */}
+                <div className="text-center mb-8">
+                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 dark:bg-white/10 text-blue-600 dark:text-white text-sm font-medium mb-6">
+                        <Sparkles className="w-4 h-4" />
+                        AI-Powered Summarization
+                    </div>
+                    <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
+                        Document Summary
+                    </h1>
+                    <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                        Upload your document and generate a comprehensive AI-powered summary with key insights.
+                    </p>
+                </div>
+
+                {/* Upload Section */}
+                <Card className="mb-8">
+                    <CardContent className="py-6">
+                        <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
+                            <FileText className="w-5 h-5 text-blue-600 dark:text-white" />
+                            Upload Your Document
+                        </h2>
+                        <DocumentUpload />
+                    </CardContent>
+                </Card>
+
+                {/* Features List */}
+                <Card>
+                    <CardContent className="py-8">
+                        <h3 className="text-xl font-semibold text-foreground mb-6 text-center">
+                            What You'll Get
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
+                            <div className="flex items-start gap-3">
+                                <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+                                <div>
+                                    <p className="font-medium text-foreground">Main Idea Extraction</p>
+                                    <p className="text-sm text-muted-foreground">Identify the core message of your document</p>
+                                </div>
+                            </div>
+                            <div className="flex items-start gap-3">
+                                <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+                                <div>
+                                    <p className="font-medium text-foreground">Key Points Summary</p>
+                                    <p className="text-sm text-muted-foreground">Important points organized in bullet format</p>
+                                </div>
+                            </div>
+                            <div className="flex items-start gap-3">
+                                <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+                                <div>
+                                    <p className="font-medium text-foreground">Concept Breakdown</p>
+                                    <p className="text-sm text-muted-foreground">Complex ideas explained simply</p>
+                                </div>
+                            </div>
+                            <div className="flex items-start gap-3">
+                                <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+                                <div>
+                                    <p className="font-medium text-foreground">AI Video Generation</p>
+                                    <p className="text-sm text-muted-foreground">Create video presentations of your summary</p>
+                                </div>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+        );
+    }
+
+
+    // Feature introduction page (shown before generating summary)
+    if (!showSummary && !summary) {
+        return (
+            <div className="max-w-4xl mx-auto px-4 py-12">
+                {/* Header */}
+                <div className="flex items-center mb-8">
+                    <Button onClick={() => router.push('/')} variant="ghost" size="sm">
+                        <ArrowLeft className="w-4 h-4 mr-2" />
+                        Back to Home
+                    </Button>
+                </div>
+
+                {/* Feature Introduction */}
+                <div className="text-center mb-12">
+                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 dark:bg-white/10 text-blue-600 dark:text-white text-sm font-medium mb-6">
+                        <Sparkles className="w-4 h-4" />
+                        AI-Powered Summarization
+                    </div>
+                    <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
+                        Document Summary
+                    </h1>
+                    <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                        Generate a comprehensive summary of your document with key insights and main ideas extracted by AI.
+                    </p>
+                </div>
+
+                {/* Features List */}
+                <Card className="mb-8">
+                    <CardContent className="py-8">
+                        <h3 className="text-xl font-semibold text-foreground mb-6 text-center">
+                            What You'll Get
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
+                            <div className="flex items-start gap-3">
+                                <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+                                <div>
+                                    <p className="font-medium text-foreground">Main Idea Extraction</p>
+                                    <p className="text-sm text-muted-foreground">Identify the core message of your document</p>
+                                </div>
+                            </div>
+                            <div className="flex items-start gap-3">
+                                <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+                                <div>
+                                    <p className="font-medium text-foreground">Key Points Summary</p>
+                                    <p className="text-sm text-muted-foreground">Important points organized in bullet format</p>
+                                </div>
+                            </div>
+                            <div className="flex items-start gap-3">
+                                <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+                                <div>
+                                    <p className="font-medium text-foreground">Concept Breakdown</p>
+                                    <p className="text-sm text-muted-foreground">Complex ideas explained simply</p>
+                                </div>
+                            </div>
+                            <div className="flex items-start gap-3">
+                                <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+                                <div>
+                                    <p className="font-medium text-foreground">AI Video Generation</p>
+                                    <p className="text-sm text-muted-foreground">Create video presentations of your summary</p>
+                                </div>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Generate Button */}
+                <div className="text-center">
+                    <Button size="lg" onClick={handleGenerateSummary}>
+                        Generate Summary
+                        <ArrowRight className="w-5 h-5 ml-2" />
+                    </Button>
+                </div>
+            </div>
+        );
+    }
 
     // Loading state
     if (isLoadingSummary) {
@@ -74,31 +277,6 @@ export default function SummaryPage() {
                                 Go Back
                             </Button>
                         </div>
-                    </CardContent>
-                </Card>
-            </div>
-        );
-    }
-
-    // No document state
-    if (!documentContent) {
-        return (
-            <div className="max-w-4xl mx-auto px-4 py-16">
-                <Card>
-                    <CardContent className="flex flex-col items-center justify-center py-16">
-                        <div className="p-4 rounded-full bg-muted">
-                            <FileText className="w-12 h-12 text-muted-foreground" />
-                        </div>
-                        <h2 className="text-xl font-semibold text-foreground mt-6">
-                            No Document Found
-                        </h2>
-                        <p className="text-muted-foreground mt-2">
-                            Upload a document first to generate a summary.
-                        </p>
-                        <Button onClick={() => router.push('/')} className="mt-6">
-                            <ArrowLeft className="w-4 h-4 mr-2" />
-                            Upload Document
-                        </Button>
                     </CardContent>
                 </Card>
             </div>
