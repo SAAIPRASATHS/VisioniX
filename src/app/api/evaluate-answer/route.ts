@@ -1,11 +1,3 @@
-/**
- * API Route: Evaluate Answer
- * POST /api/evaluate-answer
- * 
- * Evaluates a user's answer to a question and provides personalized feedback
- * Single API call per answer - optimized for free tier
- */
-
 import { NextRequest, NextResponse } from 'next/server';
 import { evaluateAnswer, isGeminiConfigured } from '@/lib/gemini';
 

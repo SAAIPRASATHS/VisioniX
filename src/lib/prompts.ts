@@ -1,12 +1,3 @@
-/**
- * Prompt Templates for Gemini API
- * Optimized for structured JSON responses and educational content analysis
- */
-
-/**
- * Generates the system prompt for question generation
- * Creates 5 higher-order thinking questions from document content
- */
 export const getQuestionGenerationPrompt = (documentContent: string): string => {
   return `You are an expert educational content analyst and assessment designer. Your task is to analyze the provided document and generate exactly 5 high-quality questions that test deep understanding.
 
@@ -44,10 +35,6 @@ Respond ONLY with valid JSON in this exact format:
 IMPORTANT: Respond with ONLY the JSON object, no additional text or markdown formatting.`;
 };
 
-/**
- * Generates the evaluation prompt for a single answer
- * Provides detailed feedback without re-sending full document
- */
 export const getAnswerEvaluationPrompt = (
   question: string,
   userAnswer: string,
@@ -90,10 +77,6 @@ Respond ONLY with valid JSON in this exact format:
 IMPORTANT: Respond with ONLY the JSON object, no additional text or markdown formatting.`;
 };
 
-/**
- * Generates a document summary for evaluation context
- * Reduces token usage by sending summary instead of full document
- */
 export const getDocumentSummaryPrompt = (documentContent: string): string => {
   return `Summarize the following document in 3-5 concise paragraphs, capturing:
 1. Main topics and themes
@@ -106,9 +89,6 @@ ${documentContent}
 Provide a clear, comprehensive summary that can be used as context for evaluating student answers.`;
 };
 
-/**
- * Types for structured responses
- */
 export interface Question {
   id: number;
   question: string;
@@ -126,9 +106,6 @@ export interface EvaluationResponse {
   improvement_tip: string;
 }
 
-/**
- * Tutorial section structure
- */
 export interface TutorialSection {
   title: string;
   content: string;
@@ -147,9 +124,6 @@ export interface TutorialResponse {
   summary: string;
 }
 
-/**
- * Summary response structure for document summarization
- */
 export interface SummaryResponse {
   title: string;
   mainIdea: string;
@@ -162,10 +136,6 @@ export interface SummaryResponse {
   wordCount: number;
 }
 
-/**
- * Generates the tutorial generation prompt
- * Creates a comprehensive, structured tutorial from document content
- */
 export const getTutorialGenerationPrompt = (documentContent: string): string => {
   return `You are an expert educational content creator. Your task is to transform the provided document into a comprehensive, easy-to-understand tutorial.
 
@@ -223,10 +193,6 @@ Respond ONLY with valid JSON in this exact format:
 IMPORTANT: Respond with ONLY the JSON object, no additional text or markdown formatting.`;
 };
 
-/**
- * Generates the summary generation prompt
- * Creates a structured, detailed summary of the document
- */
 export const getSummaryGenerationPrompt = (documentContent: string): string => {
   return `You are an expert document analyst. Your task is to create a comprehensive, well-structured summary of the provided document.
 
@@ -278,10 +244,6 @@ Respond ONLY with valid JSON in this exact format:
 IMPORTANT: Respond with ONLY the JSON object, no additional text or markdown formatting.`;
 };
 
-/**
- * Generates the video script generation prompt
- * Creates a visual script for video creation from document content
- */
 export const getVideoScriptPrompt = (content: string): string => {
   return `You are an expert video director. Your task is to turn the following content into a engaging short video script.
 

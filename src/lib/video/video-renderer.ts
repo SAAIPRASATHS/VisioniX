@@ -3,8 +3,6 @@ import path from 'path';
 import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
 
-// Set ffmpeg path
-// Try to clean up imports if needed, but for now specific require is reliable
 const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
 const ffprobePath = require('@ffprobe-installer/ffprobe').path;
 ffmpeg.setFfmpegPath(ffmpegPath);
@@ -13,12 +11,9 @@ ffmpeg.setFfprobePath(ffprobePath);
 export interface SceneAsset {
     imagePath: string;
     audioPath: string;
-    duration: number; // Duration from script or audio length
+    duration: number;
 }
 
-/**
- * Get duration of an audio file
- */
 export function getDuration(filePath: string): Promise<number> {
     return new Promise((resolve, reject) => {
         ffmpeg.ffprobe(filePath, (err, metadata) => {
@@ -29,9 +24,6 @@ export function getDuration(filePath: string): Promise<number> {
 }
 
 
-/**
- * Render scenes into a single video
- */
 export async function renderVideo(scenes: SceneAsset[]): Promise<string> {
     const tempDir = path.join(process.cwd(), 'public', 'temp');
     const outputDir = path.join(process.cwd(), 'public', 'generated-videos');
@@ -40,7 +32,6 @@ export async function renderVideo(scenes: SceneAsset[]): Promise<string> {
         fs.mkdirSync(outputDir, { recursive: true });
     }
 
-    // 1. Render each scene to a temporary video segment
     const segmentPaths: string[] = [];
 
     for (let i = 0; i < scenes.length; i++) {
@@ -51,27 +42,19 @@ export async function renderVideo(scenes: SceneAsset[]): Promise<string> {
         segmentPaths.push(segmentPath);
     }
 
-    // 2. Concatenate all segments
     const finalVideoName = `video_${uuidv4()}.mp4`;
     const finalVideoPath = path.join(outputDir, finalVideoName);
 
     await concatSegments(segmentPaths, finalVideoPath);
 
-    // Cleanup temp files (optional, leaving for debug now)
-    // segmentPaths.forEach(p => fs.unlinkSync(p));
-
-    // Return the public URL path
     return `/generated-videos/${finalVideoName}`;
 }
 
-/**
- * Render a single scene: Image + Audio -> MP4
- */
 function renderScene(scene: SceneAsset, outputPath: string): Promise<void> {
     return new Promise((resolve, reject) => {
         ffmpeg()
             .input(scene.imagePath)
-            .loop(scene.duration) // Loop image for duration
+            .loop(scene.duration)
             .input(scene.audioPath)
             .videoCodec('libx264')
             .audioCodec('aac')
@@ -79,8 +62,8 @@ function renderScene(scene: SceneAsset, outputPath: string): Promise<void> {
                 '-tune stillimage',
                 '-c:a aac',
                 '-b:a 192k',
-                '-pix_fmt yuv420p', // Required for compatibility
-                '-shortest' // Stop when audio ends (or duration)
+                '-pix_fmt yuv420p',
+                '-shortest'
             ])
             .save(outputPath)
             .on('end', () => resolve())
@@ -91,9 +74,6 @@ function renderScene(scene: SceneAsset, outputPath: string): Promise<void> {
     });
 }
 
-/**
- * Concatenate multiple video segments
- */
 function concatSegments(segmentPaths: string[], outputPath: string): Promise<void> {
     return new Promise((resolve, reject) => {
         const command = ffmpeg();
@@ -108,6 +88,6 @@ function concatSegments(segmentPaths: string[], outputPath: string): Promise<voi
                 console.error('Error concatenating segments:', err);
                 reject(err);
             })
-            .mergeToFile(outputPath, path.dirname(outputPath)); // temp dir for merge list
+            .mergeToFile(outputPath, path.dirname(outputPath));
     });
 }

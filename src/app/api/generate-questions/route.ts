@@ -1,11 +1,3 @@
-/**
- * API Route: Generate Questions
- * POST /api/generate-questions
- * 
- * Generates 5 higher-order questions from uploaded document content
- * Uses caching to avoid repeated API calls for the same document
- */
-
 import { NextRequest, NextResponse } from 'next/server';
 import { generateQuestions, generateDocumentSummary, isGeminiConfigured } from '@/lib/gemini';
 import { hashDocument, getCachedQuestions, setCachedQuestions } from '@/lib/cache';

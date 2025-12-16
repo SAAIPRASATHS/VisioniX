@@ -1,10 +1,3 @@
-/**
- * API Route: Generate Tutorial
- * POST /api/generate-tutorial
- * 
- * Generates a comprehensive tutorial from uploaded document content
- */
-
 import { NextRequest, NextResponse } from 'next/server';
 import { generateTutorial, isGeminiConfigured } from '@/lib/gemini';
 

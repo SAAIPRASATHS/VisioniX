@@ -1,10 +1,5 @@
 'use client';
 
-/**
- * Learning Context
- * Global state management for document, questions, answers, feedback, and summaries
- */
-
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import { Question, EvaluationResponse, TutorialResponse, SummaryResponse } from '@/lib/prompts';
 

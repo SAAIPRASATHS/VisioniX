@@ -3,15 +3,8 @@ import fs from 'fs';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 
-/**
- * Generate audio (mp3) from text using Google TTS (Free)
- * Splits long text if necessary (basic implementation)
- */
 export async function generateAudio(text: string): Promise<string> {
     try {
-        // google-tts-api usually splits into multiple urls if text is long
-        // For simplicity, we assume short segments (per scene narration)
-        // If long, we might need multiple calls and stitching
         if (text.length > 200) {
             console.warn('Text is long, audio might be truncated or split');
         }
@@ -22,7 +15,6 @@ export async function generateAudio(text: string): Promise<string> {
             host: 'https://translate.google.com',
         });
 
-        // Download the audio file to temp directory
         const response = await fetch(url);
         const arrayBuffer = await response.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);

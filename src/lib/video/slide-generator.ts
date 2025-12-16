@@ -4,18 +4,14 @@ import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { VideoScript } from '../prompts';
 
-/**
- * Generate images for each scene in the script
- */
 export async function generateSlideImages(script: VideoScript): Promise<string[]> {
     const browser = await puppeteer.launch({
-        headless: true, // "new" is deprecated, usually true works
+        headless: true,
         args: ['--no-sandbox', '--disable-setuid-sandbox'],
-        timeout: 60000 // Increase browser timeout
+        timeout: 60000
     });
     const page = await browser.newPage();
     await page.setViewport({ width: 1920, height: 1080 });
-    // Increase navigation timeout
     page.setDefaultNavigationTimeout(60000);
 
     const tempDir = path.join(process.cwd(), 'public', 'temp');
@@ -28,7 +24,6 @@ export async function generateSlideImages(script: VideoScript): Promise<string[]
     try {
         for (const scene of script.scenes) {
             const htmlContent = getHtmlTemplate(scene.visual, scene.textOverlay);
-            // Use domcontentloaded for faster rendering, relying on static HTML
             await page.setContent(htmlContent, { waitUntil: 'domcontentloaded' });
 
             const fileName = `${uuidv4()}.png`;
@@ -44,13 +39,7 @@ export async function generateSlideImages(script: VideoScript): Promise<string[]
     return imagePaths;
 }
 
-/**
- * Basic HTML Template for Video Slides
- * Using CSS gradients and nice typography
- */
 function getHtmlTemplate(visualDescription: string, textOverlay: string): string {
-    // Determine background style based on visual description (basic heuristic)
-    // or just use a dynamic gradient for now.
     const gradient = getRandomGradient();
 
     return `
@@ -115,11 +104,11 @@ function getHtmlTemplate(visualDescription: string, textOverlay: string): string
 
 function getRandomGradient(): string {
     const gradients = [
-        'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', // Deep Purple
-        'linear-gradient(135deg, #6B73FF 0%, #000DFF 100%)', // Blue
-        'linear-gradient(135deg, #FF9A9E 0%, #FECFEF 99%, #FECFEF 100%)', // Pinky
-        'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', // Sunset
-        'linear-gradient(43deg, #4158D0 0%, #C850C0 46%, #FFCC70 100%)' // Unicorn
+        'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        'linear-gradient(135deg, #6B73FF 0%, #000DFF 100%)',
+        'linear-gradient(135deg, #FF9A9E 0%, #FECFEF 99%, #FECFEF 100%)',
+        'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+        'linear-gradient(43deg, #4158D0 0%, #C850C0 46%, #FFCC70 100%)'
     ];
     return gradients[Math.floor(Math.random() * gradients.length)];
 }

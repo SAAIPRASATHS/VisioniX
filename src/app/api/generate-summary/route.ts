@@ -1,10 +1,3 @@
-/**
- * API Route: Generate Summary
- * POST /api/generate-summary
- * 
- * Generates a structured summary from uploaded document content
- */
-
 import { NextRequest, NextResponse } from 'next/server';
 import { generateSummary, isGeminiConfigured } from '@/lib/gemini';
 
