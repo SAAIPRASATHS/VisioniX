@@ -51,7 +51,7 @@ export function setCachedQuestions(
 export function clearExpiredCache(): void {
     const now = Date.now();
 
-    for (const [hash, entry] of cache.entries()) {
+    for (const [hash, entry] of Array.from(cache.entries())) {
         if (now - entry.timestamp > CACHE_TTL) {
             cache.delete(hash);
         }

@@ -16,7 +16,7 @@ export interface SceneAsset {
 
 export function getDuration(filePath: string): Promise<number> {
     return new Promise((resolve, reject) => {
-        ffmpeg.ffprobe(filePath, (err, metadata) => {
+        ffmpeg.ffprobe(filePath, (err: Error | null, metadata: { format: { duration?: number } }) => {
             if (err) return reject(err);
             resolve(metadata.format.duration || 5);
         });
@@ -67,7 +67,7 @@ function renderScene(scene: SceneAsset, outputPath: string): Promise<void> {
             ])
             .save(outputPath)
             .on('end', () => resolve())
-            .on('error', (err) => {
+            .on('error', (err: Error) => {
                 console.error('Error rendering scene:', err);
                 reject(err);
             });
@@ -84,7 +84,7 @@ function concatSegments(segmentPaths: string[], outputPath: string): Promise<voi
 
         command
             .on('end', () => resolve())
-            .on('error', (err) => {
+            .on('error', (err: Error) => {
                 console.error('Error concatenating segments:', err);
                 reject(err);
             })
