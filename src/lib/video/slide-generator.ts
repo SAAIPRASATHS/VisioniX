@@ -6,8 +6,14 @@ import { VideoScript } from '../prompts';
 
 export async function generateSlideImages(script: VideoScript): Promise<string[]> {
     const browser = await puppeteer.launch({
+        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
         headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+        args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-gpu'
+        ],
         timeout: 60000
     });
     const page = await browser.newPage();
