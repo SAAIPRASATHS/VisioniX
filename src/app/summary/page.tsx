@@ -329,12 +329,19 @@ function VideoGenerator({ content, title }: { content: string; title: string }) 
                 body: JSON.stringify({ content }),
             });
 
-            if (!response.ok) {
-                const data = await response.json();
-                throw new Error(data.error || 'Failed to generate video');
+            // Try to parse JSON, handle empty responses
+            let data;
+            const text = await response.text();
+            try {
+                data = text ? JSON.parse(text) : {};
+            } catch {
+                throw new Error('Server returned an invalid response. Video generation may not be available on this deployment.');
             }
 
-            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.error || data.hint || 'Failed to generate video');
+            }
+
             setVideoUrl(data.videoUrl);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Something went wrong');

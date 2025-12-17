@@ -6,6 +6,18 @@ import { renderVideo, SceneAsset, getDuration } from '@/lib/video/video-renderer
 
 export async function POST(req: NextRequest) {
     try {
+        // Video generation requires FFmpeg which is not available on Vercel serverless
+        const isServerless = process.env.VERCEL === '1' || process.env.AWS_LAMBDA_FUNCTION_NAME;
+        if (isServerless) {
+            return NextResponse.json(
+                {
+                    error: 'Video generation is not available in serverless deployment. This feature requires a server with FFmpeg installed.',
+                    hint: 'Deploy to a VPS, Docker container, or use a local development server for video generation.'
+                },
+                { status: 501 }
+            );
+        }
+
         const { content } = await req.json();
 
         if (!content) {
