@@ -1,0 +1,38 @@
+# Dependencies
+node_modules
+npm-debug.log
+
+# Git
+.git
+.gitignore
+
+# Build output (will be rebuilt in Docker)
+.next
+out
+
+# Environment files (will be set in Render)
+.env
+.env.local
+.env*.local
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Mobile app (not needed for web deployment)
+mobile
+
+# Generated files (will be created at runtime)
+public/temp
+public/generated-videos
+
+# Misc
+*.md
+!README.md
+.vercelignore
