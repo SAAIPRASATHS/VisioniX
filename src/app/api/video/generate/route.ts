@@ -6,16 +6,24 @@ import { renderVideo, SceneAsset, getDuration } from '@/lib/video/video-renderer
 
 export async function POST(req: NextRequest) {
     try {
-        // Video generation requires FFmpeg which is not available on Vercel serverless
-        const isServerless = process.env.VERCEL === '1' || process.env.AWS_LAMBDA_FUNCTION_NAME;
-        if (isServerless) {
+        // Video generation requires FFmpeg and Chrome which may not work on all cloud platforms
+        const isVercel = process.env.VERCEL === '1';
+        const isRender = process.env.RENDER === 'true';
+        const isLambda = !!process.env.AWS_LAMBDA_FUNCTION_NAME;
+
+        if (isVercel || isLambda) {
             return NextResponse.json(
                 {
-                    error: 'Video generation is not available in serverless deployment. This feature requires a server with FFmpeg installed.',
-                    hint: 'Deploy to a VPS, Docker container, or use a local development server for video generation.'
+                    error: 'Video generation is not available on serverless platforms (Vercel/Lambda). This feature requires FFmpeg and Chrome.',
+                    hint: 'Use local development server or deploy with Docker on Render/Railway for video generation.'
                 },
                 { status: 501 }
             );
+        }
+
+        // On Render, video generation may work but with limitations
+        if (isRender) {
+            console.log('Running on Render - attempting video generation with Docker setup');
         }
 
         const { content } = await req.json();
