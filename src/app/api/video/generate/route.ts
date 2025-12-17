@@ -62,8 +62,26 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ videoUrl });
     } catch (error) {
         console.error('Video generation failed:', error);
+        console.error('Stack trace:', error instanceof Error ? error.stack : 'No stack');
+        console.error('Environment:', {
+            NODE_ENV: process.env.NODE_ENV,
+            RENDER: process.env.RENDER,
+            PUPPETEER_EXECUTABLE_PATH: process.env.PUPPETEER_EXECUTABLE_PATH
+        });
+
+        let errorMessage = 'Failed to generate video';
+        if (error instanceof Error) {
+            errorMessage = error.message;
+            // Provide more helpful messages for common errors
+            if (error.message.includes('ENOENT') || error.message.includes('spawn')) {
+                errorMessage = 'Video generation requires FFmpeg and Chrome. Please ensure they are installed in the deployment environment.';
+            } else if (error.message.includes('timeout')) {
+                errorMessage = 'Video generation timed out. The server may be under heavy load.';
+            }
+        }
+
         return NextResponse.json(
-            { error: error instanceof Error ? error.message : 'Failed to generate video' },
+            { error: errorMessage },
             { status: 500 }
         );
     }
